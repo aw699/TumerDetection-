@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Tumor Classification</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <h2 class="text-center">🧠 Brain Tumor Classification</h2>
+        
+        <div class="card p-4 shadow-sm">
+            <form id="upload-form" enctype="multipart/form-data">
+                <div class="mb-3 text-center">
+                    <input type="file" id="fileInput" class="form-control" accept="image/*" required>
+                </div>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-success">🔍 Predict</button>
+                </div>
+            </form>
+
+            <div class="mt-4 text-center">
+                <img id="preview" src="" alt="Uploaded Image" class="img-fluid rounded shadow-sm" style="max-width: 300px; display: none;">
+            </div>
+
+            <div id="result" class="alert alert-info text-center mt-4" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $("#upload-form").submit(function(event) {
+                event.preventDefault();
+                let formData = new FormData();
+                let file = $("#fileInput")[0].files[0];
+
+                if (!file) {
+                    alert("Please upload an image.");
+                    return;
+                }
+
+                formData.append("file", file);
+
+                // Show preview
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    $("#preview").attr("src", e.target.result).show();
+                };
+                reader.readAsDataURL(file);
+
+                // Send request
+                $.ajax({
+                    url: "/predict",  // ✅ تم تصحيحه ليكون متوافقًا مع brain.py
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        $("#result").html(
+                            "<h4>🧠 Prediction: " + response.prediction + "</h4>" +
+                            "<p>📊 Confidence: " + response.confidence.toFixed(2) + "%</p>" +
+                            "<p>💡 Advice: " + response.advice + "</p>"
+                        ).removeClass("alert-info").addClass("alert-success").show();
+                    },
+                    error: function() {
+                        $("#result").text("❌ Error occurred while predicting.")
+                                   .removeClass("alert-info")
+                                   .addClass("alert-danger")
+                                   .show();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
